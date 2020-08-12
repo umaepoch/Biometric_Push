@@ -49,7 +49,7 @@ def main():
                             device_attendance_logs = list(map(lambda x: _apply_function_to_key(x, 'timestamp', datetime.datetime.fromtimestamp), json.loads(file_contents)))
                 try:
                     pull_process_and_push_data(device, device_attendance_logs)
-                    status.set(f'{device["device_id"]}_push_timestamp', str(datetime.datetime.now()))
+                    status.set('{device["device_id"]}_push_timestamp', str(datetime.datetime.now()))
                     if os.path.exists(dump_file):
                         os.remove(dump_file)
                     info_logger.info("Successfully processed Device: "+ device['device_id'])
@@ -141,8 +141,8 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
         info_logger.info("\t".join((ip, "Device Disable Attempted. Result:", str(x))))
         attendances = conn.get_attendance()
         info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
-        status.set(f'{device_id}_push_timestamp', None)
-        status.set(f'{device_id}_pull_timestamp', str(datetime.datetime.now()))
+        status.set('{device_id}_push_timestamp', None)
+        status.set('{device_id}_pull_timestamp', str(datetime.datetime.now()))
         if len(attendances):
             # keeping a backup before clearing data incase the programs fails.
             # if everything goes well then this file is removed automatically at the end.
@@ -167,7 +167,7 @@ def send_to_erpnext(employee_field_value, timestamp, device_id=None, log_type=No
     """
     Example: send_to_erpnext('12349',datetime.datetime.now(),'HO1','IN')
     """
-    url = config.ERPNEXT_URL + "/api/method/erpnext.hr.doctype.employee_checkin.employee_checkin.add_log_based_on_employee_field"
+    url = config.ERPNEXT_URL + "/api/method/biometric_attendance.biometric_attendance.doctype.biometric_attendance.biometric_attendance.add_log_based_on_employee_field"
     headers = {
         'Authorization': "token "+ config.ERPNEXT_API_KEY + ":" + config.ERPNEXT_API_SECRET,
         'Accept': 'application/json'
@@ -203,21 +203,21 @@ def update_shift_last_sync_timestamp(shift_type_device_mapping):
         all_devices_pushed = True
         pull_timestamp_array = []
         for device_id in shift_type_device_map['related_device_id']:
-            if not status.get(f'{device_id}_push_timestamp'):
+            if not status.get('{device_id}_push_timestamp'):
                 all_devices_pushed = False
                 break
-            pull_timestamp_array.append(_safe_convert_date(status.get(f'{device_id}_pull_timestamp'), "%Y-%m-%d %H:%M:%S.%f"))
+            pull_timestamp_array.append(_safe_convert_date(status.get('{device_id}_pull_timestamp'), "%Y-%m-%d %H:%M:%S.%f"))
         if all_devices_pushed:
             min_pull_timestamp = min(pull_timestamp_array)
             if isinstance(shift_type_device_map['shift_type_name'], str): # for backward compatibility of config file
                 shift_type_device_map['shift_type_name'] = [shift_type_device_map['shift_type_name']]
             for shift in shift_type_device_map['shift_type_name']:
                 try:
-                    sync_current_timestamp = _safe_convert_date(status.get(f'{shift}_sync_timestamp'), "%Y-%m-%d %H:%M:%S.%f")
+                    sync_current_timestamp = _safe_convert_date(status.get('{shift}_sync_timestamp'), "%Y-%m-%d %H:%M:%S.%f")
                     if (sync_current_timestamp and min_pull_timestamp > sync_current_timestamp) or (min_pull_timestamp and not sync_current_timestamp):
                         response_code = send_shift_sync_to_erpnext(shift, min_pull_timestamp)
                         if response_code == 200:
-                            status.set(f'{shift}_sync_timestamp', str(min_pull_timestamp))
+                            status.set('{shift}_sync_timestamp', str(min_pull_timestamp))
                 except:
                     error_logger.exception('Exception in update_shift_last_sync_timestamp, for shift:'+shift)
 

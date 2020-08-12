@@ -312,7 +312,7 @@ class BiometricWindow(QMainWindow):
 
 def read_file_contents(file_name, index):
     running_status = []
-    with open('/'.join([config.LOGS_DIRECTORY])+f'/{file_name}.log', 'r') as file_handler:
+    with open('/'.join([config.LOGS_DIRECTORY])+'/{file_name}.log', 'r') as file_handler:
         for idx, line in enumerate(file_handler,1):
             if idx>=index:
                 running_status.append(line)
